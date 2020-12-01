@@ -35,6 +35,7 @@ int main(int argc, char** argv)
                 if(a+b+c == 2020)
                 {
                     std::cout << a*b*c << std::endl;
+                    break;
                 }
             }
         }
