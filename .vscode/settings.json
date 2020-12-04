@@ -42,6 +42,20 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
-    }
+        "xutility": "cpp",
+        "unordered_map": "cpp",
+        "map": "cpp",
+        "xtree": "cpp",
+        "sstream": "cpp",
+        "set": "cpp",
+        "ctime": "cpp",
+        "iterator": "cpp",
+        "locale": "cpp",
+        "regex": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
