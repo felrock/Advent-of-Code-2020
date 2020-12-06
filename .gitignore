@@ -1,0 +1,4 @@
+#ignore
+.vscode
+a.out
+a.exe
