@@ -14,6 +14,7 @@ int main(int argc, char** argv)
 
     std::array<std::array<bool, 128>, 8> positions;
 
+    // 
     for(auto& a : positions)
         for(auto& b : a)
              b = false;
