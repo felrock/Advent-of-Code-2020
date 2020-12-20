@@ -1,0 +1,124 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <regex>
+#include <unordered_map>
+#include <vector>
+
+using Rules = std::vector<std::string>;
+
+Rules parseRule(std::string str)
+{
+  Rules rules;
+  std::string num = "";
+  for(const auto& chr : str)
+  {
+    if(chr == ' ')
+    {
+      rules.push_back(num);
+      num = "";
+    }
+    else
+    {
+      num += chr;
+    }
+  }
+  rules.push_back(num);
+  return rules;
+}
+
+
+std::string expandRule(const std::unordered_map<std::string, std::vector<Rules>>& rule_map,
+    const std::string& rule_start, const std::string& rule_current)
+{
+  if(rule_map.find(rule_current) == rule_map.end())
+  {
+    return rule_current;
+  }
+
+  const std::string delim   = "|";
+  std::string expanded_rule = "";
+  std::vector<Rules> rules  = rule_map.at(rule_current);
+  for(const auto& rule : rules)
+  {
+    for(const auto& r : rule)
+    {
+      expanded_rule += expandRule(rule_map, rule_start, r);
+    }
+    if(rule_start == rule_current)
+    {
+      expanded_rule += delim;
+    }
+  }
+  return expanded_rule;
+}
+
+int main(int argc, char** argv)
+{
+  std::string s;
+  std::fstream file(argv[1]);
+
+  std::unordered_map<std::string, std::vector<Rules>> rule_map;
+
+  while(std::getline(file, s))
+  {
+    if(s == "")
+    {
+      // finished reading rules
+      break;
+    }
+    std::string rule_name = s.substr(0, s.find(":"));
+    std::string rule_str = s.substr(s.find(":"), s.size());
+    std::vector<std::vector<std::string>> rules;
+    std::smatch sm;
+    std::regex pattern1("[0-9]+");
+    std::regex pattern2("\".*\"");
+    if(s.find("|") != std::string::npos)
+    {
+      int i=0;
+      Rules first_rule;
+      Rules second_rule;
+      while(i < 2)
+      {
+        std::regex_search(rule_str, sm, pattern1);
+        first_rule.push_back(sm.str());
+        rule_str = sm.suffix().str();
+        i++;
+      }
+      i = 0;
+      while(i < 2)
+      {
+        std::regex_search(rule_str, sm, pattern1);
+        second_rule.push_back(sm.str());
+        rule_str = sm.suffix().str();
+        i++;
+      }
+      rules.push_back(first_rule);
+      rules.push_back(second_rule);
+    }
+    else if(s.find("\"") != std::string::npos)
+    {
+      Rules first_rule;
+      std::regex_search(rule_str, sm, pattern2);
+      std::string match = sm.str();
+      first_rule.push_back(match.substr(1, match.size()-2));
+      rules.push_back(first_rule);
+    }
+    else
+    {
+      int i=0;
+      Rules first_rule;
+      while(i < 2)
+      {
+        std::regex_search(rule_str, sm, pattern1);
+        first_rule.push_back(sm.str());
+        rule_str = sm.suffix().str();
+        i++;
+      }
+      rules.push_back(first_rule);
+    }
+    rule_map[rule_name] = rules;
+  }
+  std::cout << expandRule(rule_map, "0", "0");
+  return 0;
+}
