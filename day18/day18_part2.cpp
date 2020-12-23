@@ -2,70 +2,89 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_set>
-#include <iomanip>
-#include <functional>
+#include <deque>
+#include <sstream>
 
-long long calculate(std::string str, int start, int end)
+std::vector<std::string> getTokens(const std::string& str, const char& delim)
 {
-    long long sum = 0;
-    std::string chunk = str.substr(start, end);
-
-    bool latest_op = chunk.find('*') != std::string::npos ? true : false;
-    for(int i=start; i < end; ++i)
+    std::stringstream ss;
+    std::vector<std::string> tokens;
+    for(const auto& chr : str)
     {
-        if(str[i] == ' ')
+        if(chr == delim)
         {
-            continue;
+            tokens.push_back(ss.str());
+            ss.str("");
         }
-        else if(str[i] == '(')
+        else
         {
-            int new_end = i+1;
-            int open = 1;
-            while(open != 0)
-            {
-                if(str[new_end] == '(')
-                {
-                    open++;
-                }
-                if(str[new_end] == ')')
-                {
-                    open--;
-                }
-                new_end++;
-            }
-            if(latest_op)
-            {
-                sum += calculate(str, i+1, new_end);
-            }
-            else
-            {
-                sum *= calculate(str, i+1, new_end);
-            }
-            i = new_end;
-        }
-        else if(str[i] == '+')
-        {
-            latest_op = true;
-        }
-        else if(str[i] == '*')
-        {
-            latest_op = false;
-        }
-        else if(str[i] >= '0' && str[i] <= '9')
-        {
-            int num = str[i] - '0';
-            if(latest_op)
-            {
-                sum += num;
-            }
-            else
-            {
-                sum *= num;
-            }
+            ss << chr;
         }
     }
-    return sum;
+    tokens.push_back(ss.str());
+
+    return tokens;
+}
+
+std::pair<int, int> findBrackets(const std::string& str)
+{
+    int start=0; 
+    int end=str.size()-1;
+    for(int i=0; i < str.size(); ++i)
+    {
+        if(str[i] == '(')
+        {
+            start = i+1;
+        }
+        if(str[i] == ')')
+        {
+            end = i-start;
+            break;
+        }
+    }
+
+    return std::make_pair(start, end);
+}
+
+std::string reduce(std::string str)
+{
+    std::vector<std::string> split = getTokens(str, ' ');
+    std::deque<std::string> ops;
+    std::deque<std::string> nums;
+    for(const auto& sp : split)
+    {
+        if(sp == "+" || sp == "*")
+        {
+            ops.push_back(sp);
+        }
+        else
+        {
+            nums.push_back(sp);
+        }
+        
+    }
+    for(int i=0; i < ops.size(); ++i)
+    {
+        if(ops[i] == "+")
+        {
+            std::string new_num = std::to_string(std::stoll(nums[i]) + std::stoll(nums[i+1]));
+            nums.pop_front();
+            nums.pop_front();
+            nums.push_front(new_num);
+            ops.pop_front();
+            i-=1;
+        }
+    }
+    for(int i=0; i < ops.size(); ++i)
+    {
+        std::string new_num = std::to_string(std::stoll(nums[i]) * std::stoll(nums[i+1]));
+        nums.pop_front();
+        nums.pop_front();
+        nums.push_front(new_num);
+        ops.pop_front();
+        i-=1;
+    }
+    return nums[0];
 }
 
 int main(int argc, char** argv)
@@ -77,8 +96,15 @@ int main(int argc, char** argv)
     long long sum = 0;
     while(std::getline(file, s))
     {
-        long long t =  calculate(s, 0, s.size());
-        sum += t;
+        std::string str = s;
+        while(str.find("(") != std::string::npos)
+        {
+            std::pair<int, int> indexes = findBrackets(str);
+            std::string reduced = reduce(str.substr(indexes.first, indexes.second));
+            int last_piece = indexes.first + indexes.second+1;
+            str = str.substr(0, indexes.first-1) + reduced + str.substr(last_piece, str.size()-last_piece);
+        }
+        sum += std::stoll(reduce(str));
     }
     std::cout << sum << std::endl;
     return 0;
